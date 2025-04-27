@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>PDF Analyzer</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+</head>
+
+<body class="bg-light">
+  <div class="container my-5">
+    <h1 class="mb-4 text-center">PDF Analyzer</h1>
+
+    <form id="upload-form" enctype="multipart/form-data" class="mb-5">
+      <div class="mb-3">
+        <label class="form-label">Upload PDF:</label>
+        <input class="form-control" type="file" name="file" required>
+      </div>
+      <button class="btn btn-primary" type="submit">Upload and Analyze</button>
+    </form>
+
+    <!-- 👇 Live Quick Analysis Preview -->
+    <div id="live-preview" class="alert alert-info d-none">
+      <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
+      <strong>Analyzing...</strong> <span id="preview-text"></span>
+    </div>
+
+    <!-- 🖼️ Carousel for displaying images -->
+    <div id="image-carousel" class="carousel slide d-none" data-bs-ride="carousel">
+      <div class="carousel-inner" id="carousel-images"></div>
+      <button class="carousel-control-prev" type="button" data-bs-target="#image-carousel" data-bs-slide="prev">
+        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+      </button>
+      <button class="carousel-control-next" type="button" data-bs-target="#image-carousel" data-bs-slide="next">
+        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+      </button>
+    </div>
+
+    <!-- 📚 Cards Container for full results -->
+    <div id="cards-container" class="row gy-4 mt-4"></div>
+  </div>
+
+<script>
+$(document).ready(function() {
+  $("#upload-form").submit(function(event) {
+    event.preventDefault();
+    var formData = new FormData(this);
+
+    // Show quick preview spinner
+    $("#live-preview").removeClass("d-none");
+    $("#preview-text").text("Starting image analysis...");
+
+    // Start image analysis first
+    $.ajax({
+      url: "/start_analysis", // Adjust the URL to match your backend route for image extraction
+      type: "POST",
+      data: formData,
+      contentType: false,
+      processData: false,
+      success: function(response) {
+        console.log("[INFO] Image analysis started:", response);
+
+        // First image and its description
+        if (response.loading) {
+          // Show the first image and analysis immediately in the loading box
+          var firstImg = response.processed_images[0];
+          var img_src = firstImg[1];
+          var analysis = firstImg[2];
+
+          // Add image and analysis to live preview
+          var imgHtml = `
+            <div class="d-flex justify-content-center">
+              <img src="data:image/png;base64,${img_src}" class="img-fluid mb-3" style="max-width: 400px;" alt="First Image">
+            </div>
+            <p><strong>Analysis:</strong> ${analysis}</p>
+          `;
+          $("#preview-text").html(imgHtml);
+        }
+      },
+      error: function(err) {
+        console.log("[ERROR] Error during image analysis:", err);
+        $("#live-preview").text("Analysis failed. Please try again.");
+      }
+    });
+  });
+});
+</script>
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

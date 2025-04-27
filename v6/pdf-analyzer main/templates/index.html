@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Analyzer</title>
+</head>
+<body>
+    <h1>PDF Analyzer</h1>
+    
+    <form action="/" method="post" enctype="multipart/form-data">
+        <label for="file">Upload PDF:</label>
+        <input type="file" name="file" required>
+        
+        <label for="image_selection">Select Image to Process:</label>
+        <select name="image_selection">
+            <option value="all">All Images</option>
+            <option value="first">First Image</option>
+            <option value="second">Second Image</option>
+            <option value="third">Third Image</option>
+            <option value="1">Specific Image (by index)</option>
+        </select>
+        
+        <button type="submit">Upload</button>
+    </form>
+
+    {% if text %}
+        <h2>Extracted Text:</h2>
+        <pre>{{ text }}</pre>
+    {% endif %}
+    
+    {% if processed_images %}
+        <h2>Extracted Images and Analysis:</h2>
+        {% for img_num, response in processed_images %}
+            <div style="margin-bottom: 20px;">
+                <h3>Image {{ img_num }}:</h3>
+                <img src="data:image/png;base64,{{ images[img_num-1] }}" alt="Extracted Image" style="max-width: 400px; display: block; margin-bottom: 10px;">
+                <h4>AI Analysis:</h4>
+                <pre>{{ response }}</pre>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    {% if categories %}
+        <h2>Extracted Categories from Text:</h2>
+        <pre>{{ categories }}</pre>
+    {% endif %}
+
+    {% if file %}
+        <a href="{{ url_for('download_file', filename=file) }}">Download Uploaded File</a>
+    {% endif %}
+</body>
+</html>

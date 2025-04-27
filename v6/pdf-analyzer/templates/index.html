@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>PDF Analyzer</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+</head>
+
+<body class="bg-light">
+  <div class="container my-5">
+    <h1 class="mb-4 text-center">PDF Analyzer</h1>
+
+    <form id="upload-form" enctype="multipart/form-data" class="mb-5">
+      <div class="mb-3">
+        <label class="form-label">Upload PDF:</label>
+        <input class="form-control" type="file" name="file" required>
+      </div>
+      <button class="btn btn-primary" type="submit">Upload and Analyze</button>
+    </form>
+
+    <div id="live-preview" class="alert alert-info d-none">
+      <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
+      <strong>Analyzing...</strong> <span id="preview-text"></span>
+    </div>
+
+    <div id="image-carousel" class="carousel slide d-none" data-bs-ride="carousel">
+      <div class="carousel-inner" id="carousel-images"></div>
+      <button class="carousel-control-prev" type="button" data-bs-target="#image-carousel" data-bs-slide="prev">
+        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+      </button>
+      <button class="carousel-control-next" type="button" data-bs-target="#image-carousel" data-bs-slide="next">
+        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+      </button>
+    </div>
+
+    <div id="cards-container" class="row gy-4 mt-4"></div>
+  </div>
+
+<script>
+$(document).ready(function() {
+  $("#upload-form").submit(function(event) {
+    event.preventDefault();
+    var formData = new FormData(this);
+
+    $("#live-preview").removeClass("d-none");
+    $("#preview-text").text("Starting image analysis...");
+
+    $.ajax({
+      url: "/start_analysis",
+      type: "POST",
+      data: formData,
+      contentType: false,
+      processData: false,
+      success: function(response) {
+        console.log("[INFO] Start analysis:", response);
+        var sessionId = response.session_id;
+        processNextStep(sessionId);
+      },
+      error: function(err) {
+        console.log("[ERROR] Error during start analysis:", err);
+        $("#preview-text").text("Failed to start analysis.");
+      }
+    });
+  });
+});
+
+function processNextStep(sessionId) {
+  $.ajax({
+    url: "/process_next",
+    type: "POST",
+    contentType: "application/json",
+    data: JSON.stringify({ session_id: sessionId }),
+    success: function(response) {
+      if (response.step === "image") {
+        var imgHtml = `
+          <div class="card mb-3">
+            <img src="data:image/png;base64,${response.image_b64}" class="card-img-top" style="max-width:500px;margin:auto;">
+            <div class="card-body">
+              <p class="card-text"><strong>Analysis:</strong> ${response.analysis}</p>
+            </div>
+          </div>
+        `;
+        $("#cards-container").append(imgHtml);
+      }
+      else if (response.step === "text") {
+        //var textHtml = `<div class="alert alert-secondary"><strong>Extracted Text:</strong><br>${response.text}</div>`;
+        //$("#cards-container").append(textHtml);
+      }
+      else if (response.step === "categories") {
+        var catHtml = `<div class="alert alert-success"><strong>Extracted Categories:</strong><br>${response.categories}</div>`;
+        $("#cards-container").append(catHtml);
+      }
+
+      if (!response.done) {
+        setTimeout(() => processNextStep(sessionId), 300);  // poll every 300ms
+      } else {
+        $("#live-preview").addClass("d-none");
+      }
+    },
+    error: function(err) {
+      console.log("[ERROR] Polling failed:", err);
+      $("#live-preview").text("Polling failed.");
+    }
+  });
+}
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

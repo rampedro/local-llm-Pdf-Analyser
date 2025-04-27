@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Literature Review Assistant</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.0.3/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 text-gray-900">
+
+<div class="container mx-auto my-8 p-6 bg-white rounded-lg shadow-lg">
+    <h1 class="text-3xl font-semibold mb-6">Literature Review Assistant</h1>
+    
+    <!-- Upload Form -->
+    <form action="/" method="POST" enctype="multipart/form-data" class="mb-8">
+        <input type="file" name="file" accept=".pdf,.docx" class="py-2 px-4 border rounded-lg mb-4">
+        <button type="submit" class="bg-blue-500 text-white py-2 px-6 rounded-lg">Upload and Analyze</button>
+    </form>
+
+    <!-- Text Extraction -->
+    {% if text %}
+        <div class="mb-6">
+            <h2 class="text-2xl font-semibold mb-2">Extracted Text</h2>
+            <pre class="p-4 border rounded-lg bg-gray-50">{{ text }}</pre>
+        </div>
+    {% endif %}
+
+    <!-- Image Analysis -->
+    {% if images %}
+        <div class="mb-6">
+            <h2 class="text-2xl font-semibold mb-2">Extracted Images and Analysis</h2>
+            {% for img in images %}
+                <div class="mb-4">
+                    <img src="data:image/png;base64,{{ img }}" class="w-full h-auto rounded-lg shadow-md">
+                    <div class="text-gray-700 mt-2">
+                        <p><strong>Image Analysis:</strong></p>
+                        <p>{{ categories }}</p>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <!-- Category Extraction -->
+    {% if categories %}
+        <div class="mb-6">
+            <h2 class="text-2xl font-semibold mb-2">Extracted Categories</h2>
+            <pre class="p-4 border rounded-lg bg-gray-50">{{ categories }}</pre>
+        </div>
+    {% endif %}
+    
+    <!-- Download Button -->
+    {% if text %}
+        <a href="/download/{{ file.filename }}" class="bg-green-500 text-white py-2 px-6 rounded-lg mt-4 inline-block">Download Processed File</a>
+    {% endif %}
+</div>
+
+</body>
+</html>
